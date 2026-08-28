@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Your Garden</title>
+  <!-- Press Start 2P — chunky pixel font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="game-container">
+
+  <!-- Garden — full screen, header + dock float over it -->
+  <main id="garden-bed">
+
+    <!-- Floating glass header -->
+    <header id="header">
+      <h1>Your Garden</h1>
+      <div id="seed-display">
+        <img src="sprites/Marigold Seeds.png" alt="Seeds" />
+        <span id="seed-count">Seeds: 3</span>
+      </div>
+    </header>
+    <div id="garden-hint">
+      <img src="sprites/Pot.png" alt="" />
+      Drag a pot to start!
+    </div>
+
+    <!-- FX particles canvas sits inside the garden -->
+    <canvas id="fx-canvas"></canvas>
+
+    <!-- Phone-dock toolbar floats over the garden, no rectangle -->
+    <div id="dock-wrap">
+      <footer id="toolbar">
+        <div class="tool" id="tool-pot"        data-tool="pot"        draggable="true">
+          <div class="tool-icon">
+            <img src="sprites/Pot.png"            alt="Pot" />
+          </div>
+          <span>Pot</span>
+        </div>
+        <div class="tool" id="tool-seeds"      data-tool="seed"       draggable="true">
+          <div class="tool-icon">
+            <img src="sprites/Marigold Seeds.png" alt="Seeds" />
+          </div>
+          <span>Seeds</span>
+        </div>
+        <div class="tool" id="tool-water"      data-tool="water"      draggable="true">
+          <div class="tool-icon">
+            <img src="sprites/Watering Can.png"   alt="Water" />
+          </div>
+          <span>Water</span>
+        </div>
+        <div class="tool" id="tool-fertilizer" data-tool="fertilizer" draggable="true">
+          <div class="tool-icon">
+            <img src="sprites/Fertilizer.png"     alt="Fertilizer" />
+          </div>
+          <span>Fertilizer</span>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast"></div>
+  </main>
+
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>

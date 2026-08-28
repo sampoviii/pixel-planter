@@ -1,0 +1,378 @@
+/* ── Reset ───────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  /* Press Start 2P everywhere */
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+}
+
+/* ── Game container ─────────────────────────── */
+#game-container {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ══════════════════════════════════════════════
+   BACKGROUND — Earthy Terracotta
+   dusty clay → sand → warm cream white
+══════════════════════════════════════════════ */
+#garden-bed {
+  flex-grow: 1;
+  position: relative;
+  overflow: hidden;
+  cursor: crosshair;
+  touch-action: none;
+  background:
+    radial-gradient(ellipse at 50% 110%, rgba(160,80,30,0.18) 0%, transparent 55%),
+    linear-gradient(180deg,
+      #e8937a 0%,
+      #f0b48a 18%,
+      #f5c9a0 38%,
+      #f7ddb8 58%,
+      #faecd0 76%,
+      #fdf5e8 100%
+    );
+}
+
+/* subtle dot texture */
+#garden-bed::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(160,80,30,0.05) 1px, transparent 1px);
+  background-size: 30px 30px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Garden hint ─────────────────────────────── */
+#garden-hint {
+  position: absolute;
+  top: 42%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: rgba(120,55,20,0.35);
+  pointer-events: none;
+  font-size: clamp(7px, 1.1vw, 9px);
+  line-height: 2.8;
+  z-index: 1;
+}
+#garden-hint img {
+  width: clamp(44px, 7vw, 70px);
+  image-rendering: pixelated;
+  opacity: 0.28;
+  display: block;
+  margin: 0 auto 12px;
+}
+
+/* ── FX canvas ───────────────────────────────── */
+#fx-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* ══════════════════════════════════════════════
+   HEADER — floating glass pill, top center
+══════════════════════════════════════════════ */
+#header {
+  position: absolute;
+  top: clamp(12px, 2vh, 22px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  pointer-events: all;
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: clamp(8px,1.3vh,12px) clamp(16px,2.2vw,26px);
+
+  border-radius: 999px;
+  background: rgba(255,245,235,0.55);
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  border: 1px solid rgba(255,255,255,0.82);
+  box-shadow:
+    0 2px 0 rgba(255,255,255,0.65) inset,
+    0 6px 24px rgba(100,40,10,0.12),
+    0 2px 6px rgba(0,0,0,0.07);
+  white-space: nowrap;
+}
+
+#header h1 {
+  font-size: clamp(7px, 1.2vw, 11px);
+  letter-spacing: 1px;
+  color: #6b2a0e;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.7);
+}
+
+#seed-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.45);
+  padding: clamp(4px,0.8vh,7px) clamp(10px,1.4vw,15px);
+  border-radius: 999px;
+  border: 1px solid rgba(200,120,60,0.22);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 4px rgba(0,0,0,0.08);
+  flex-shrink: 0;
+}
+#seed-display img  { width: clamp(16px,2.6vw,24px); height: clamp(16px,2.6vw,24px); image-rendering: pixelated; }
+#seed-display span { font-size: clamp(6px,1vw,9px); font-weight: bold; color: #7a3410; letter-spacing: 0.5px; white-space: nowrap; }
+
+/* ══════════════════════════════════════════════
+   POT SLOTS
+══════════════════════════════════════════════ */
+.pot-slot {
+  position: absolute;
+  width: clamp(110px, 15vw, 185px);
+  height: clamp(148px, 20vw, 240px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  cursor: default;
+  z-index: 10;
+  touch-action: none;
+  filter: drop-shadow(0 6px 12px rgba(80,30,10,0.25));
+}
+.pot-slot.dragging-pot { opacity: 0.5; }
+
+.current-img {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  image-rendering: pixelated;
+  cursor: grab;
+  z-index: 2;
+  display: block;
+}
+.current-img:active { cursor: grabbing; }
+.current-img:hover  { filter: brightness(1.1); }
+
+/* Harvest glow */
+.pot-slot.harvestable .current-img {
+  cursor: pointer;
+  animation: harvestPulse 1.4s ease-in-out infinite;
+}
+@keyframes harvestPulse {
+  0%,100% { filter: drop-shadow(0 0 8px #ffd700)  drop-shadow(0 0 18px rgba(255,190,0,0.5)); }
+  50%      { filter: drop-shadow(0 0 22px #ffcc00) drop-shadow(0 0 40px rgba(255,210,0,0.75)); }
+}
+
+/* Pop-in on stage change */
+@keyframes popIn {
+  0%   { transform: translateX(-50%) scale(0.62); opacity: 0; }
+  62%  { transform: translateX(-50%) scale(1.08); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1);    opacity: 1; }
+}
+.current-img.pop { animation: popIn 0.34s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
+/* ── Cloud bubble ────────────────────────────── */
+.cloud-bubble {
+  position: absolute;
+  top: -48px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  background: rgba(255,252,248,0.96);
+  border: 1.5px solid rgba(200,150,100,0.4);
+  border-radius: 14px;
+  padding: clamp(4px,0.8vh,7px) clamp(7px,1.2vw,12px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 3px 12px rgba(120,50,10,0.13), inset 0 1px 0 rgba(255,255,255,0.9);
+  animation: floatBubble 2.4s ease-in-out infinite;
+  white-space: nowrap;
+}
+.cloud-bubble::before {
+  content: ''; position: absolute;
+  bottom: -11px; left: 50%; transform: translateX(-50%);
+  width: 8px; height: 8px;
+  background: rgba(255,252,248,0.96);
+  border: 1.5px solid rgba(200,150,100,0.4);
+  border-radius: 50%;
+}
+.cloud-bubble::after {
+  content: ''; position: absolute;
+  bottom: -18px; left: 50%; transform: translateX(-50%);
+  width: 5px; height: 5px;
+  background: rgba(255,252,248,0.96);
+  border: 1.5px solid rgba(200,150,100,0.4);
+  border-radius: 50%;
+}
+.cloud-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cloud-icon { width: clamp(20px,3vw,26px); height: clamp(20px,3vw,26px); image-rendering: pixelated; }
+.cloud-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(5px, 0.75vw, 7px);
+  color: #7a3a10;
+  text-align: center;
+  line-height: 1.5;
+  max-width: 130px;
+  white-space: normal;
+}
+@keyframes floatBubble {
+  0%,100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(-6px); }
+}
+
+/* ── Info badge ──────────────────────────────── */
+.info-badge {
+  position: absolute;
+  bottom: clamp(-30px,-4vw,-24px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 10px;
+  font-size: clamp(6px, 0.9vw, 8px);
+  border-radius: 20px;
+  z-index: 15;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+}
+.info-badge.label { background: rgba(100,40,10,0.55); color: #ffd8b0; }
+.info-badge.timer { background: rgba(60,20,0,0.65);  color: #ffe0a0; }
+
+/* ══════════════════════════════════════════════
+   PHONE DOCK — floating pill at the bottom
+══════════════════════════════════════════════ */
+#dock-wrap {
+  position: absolute;
+  bottom: clamp(14px, 3vh, 28px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  pointer-events: none;
+}
+#dock-wrap > #toolbar { pointer-events: all; }
+
+#toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(8px, 2vw, 20px);
+  padding: clamp(8px,1.5vh,14px) clamp(16px,2.5vw,28px);
+  border-radius: 999px;
+
+  background: rgba(255,245,235,0.58);
+  backdrop-filter: blur(28px) saturate(2);
+  -webkit-backdrop-filter: blur(28px) saturate(2);
+  border: 1px solid rgba(255,255,255,0.85);
+  box-shadow:
+    0 2px 0 rgba(255,255,255,0.7) inset,
+    0 -1px 0 rgba(0,0,0,0.04) inset,
+    0 8px 32px rgba(100,40,10,0.14),
+    0 2px 6px rgba(0,0,0,0.08);
+}
+
+.tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: grab;
+  touch-action: none;
+  padding: 0;
+  background: none;
+  border: none;
+  transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1);
+}
+.tool:hover  { transform: translateY(-8px) scale(1.12); }
+.tool:active { cursor: grabbing; transform: translateY(-3px) scale(1.05); }
+
+.tool-icon {
+  width: clamp(48px, 7vw, 66px);
+  height: clamp(48px, 7vw, 66px);
+  border-radius: clamp(10px, 1.5vw, 15px);
+  background: rgba(255,255,255,0.72);
+  border: 1px solid rgba(255,255,255,0.9);
+  box-shadow: 0 2px 8px rgba(100,40,10,0.15), inset 0 1px 0 rgba(255,255,255,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.15s;
+}
+.tool:hover .tool-icon {
+  box-shadow: 0 6px 20px rgba(100,40,10,0.2), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+.tool-icon img {
+  width: 68%; height: 68%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.tool span {
+  font-size: clamp(6px, 0.9vw, 8px);
+  color: rgba(100,45,10,0.75);
+  letter-spacing: 0.3px;
+  pointer-events: none;
+}
+
+.tool.disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+
+/* ══════════════════════════════════════════════
+   TOAST — centered on screen
+══════════════════════════════════════════════ */
+#toast {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(60,20,5,0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #ffd8a8;
+  padding: 12px 28px;
+  border-radius: 14px;
+  border: 1px solid rgba(220,140,60,0.3);
+  font-size: clamp(7px, 1.1vw, 9px);
+  line-height: 1.8;
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+  text-align: center;
+}
+#toast.show { opacity: 1; }
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  #toolbar { gap: 10px; padding: 10px 20px; }
+  .tool-icon { border-radius: 12px; }
+  .cloud-bubble { top: -44px; }
+}
+
+@media (max-width: 480px) {
+  #header h1   { font-size: 7px; letter-spacing: 0.5px; }
+  .pot-slot    { width: 100px; height: 132px; }
+  .cloud-bubble { top: -40px; padding: 4px 7px; gap: 4px; }
+  .cloud-icon  { width: 18px; height: 18px; }
+  #toolbar     { gap: 8px; padding: 8px 16px; }
+  .tool-icon   { width: 44px; height: 44px; border-radius: 10px; }
+  .tool span   { font-size: 6px; }
+}
